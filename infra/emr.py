@@ -1,6 +1,7 @@
 import os.path as path
 import jsii
 from infra.landing_zone import ILandingZone
+from infra.auth import DirectoryServicesConstruct
 from aws_cdk import (
   core,
   aws_ec2 as ec2,
@@ -27,7 +28,7 @@ class HadoopConstruct(core.Construct):
   """
   Configure the Graph management layer
   """
-  def __init__(self, scope: core.Construct, id: str, landing_zone:ILandingZone, **kwargs) -> None:
+  def __init__(self, scope: core.Construct, id: str, landing_zone:ILandingZone, directory:DirectoryServicesConstruct, **kwargs) -> None:
     super().__init__(scope, id, **kwargs)
 
     # Configure the security groups
@@ -111,10 +112,16 @@ class HadoopConstruct(core.Construct):
           classification='hive-site',
           configuration_properties={
             'hive.metastore.client.factory.class':'com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory',
-            'aws.glue.partition.num.segments':'10', #1 to 10, default=5
-            "hive.metastore.schema.verification": "false",
+            'aws.glue.partition.num.segments':'10', #1 to 10; (default=5)
+            'hive.metastore.schema.verification': 'false',
           })
       ],
+      # kerberos_attributes= emr.CfnCluster.KerberosAttributesProperty(
+      #   kdc_admin_password=directory.password,
+      #   realm= directory.mad.name,
+      #   ad_domain_join_password=directory.password,
+      #   ad_domain_join_user= directory.username
+      # ),
       managed_scaling_policy= emr.CfnCluster.ManagedScalingPolicyProperty(
         compute_limits=emr.CfnCluster.ComputeLimitsProperty(
           minimum_capacity_units=1,
@@ -123,7 +130,7 @@ class HadoopConstruct(core.Construct):
         )
       ),
       instances= emr.CfnCluster.JobFlowInstancesConfigProperty(
-        #hadoop_version='2.4.0',   
+        #hadoop_version='2.4.0',
         termination_protected=False,
         master_instance_fleet= emr.CfnCluster.InstanceFleetConfigProperty(
           target_spot_capacity=1,

@@ -5,6 +5,8 @@ from aws_cdk.core import App, Stack, Environment, Construct, NestedStack
 from infra.backup import BackupStrategyConstruct
 from infra.emr import HadoopConstruct
 from infra.vpce import VpcEndpointsForAWSServices
+from infra.auth import DirectoryServicesConstruct
+from infra.jumpbox import JumpBoxConstruct
 from infra.landing_zone import ILandingZone
 from aws_cdk import (
     core,
@@ -74,7 +76,9 @@ class EuroMapRed(LandingZone):
   def __init__(self, scope:Construct, id:str, **kwargs)->None:
     super().__init__(scope, id, **kwargs)    
 
-    self.emr = HadoopConstruct(self,'Analytics', landing_zone=self)
+    self.directory = DirectoryServicesConstruct(self,'Directory',landing_zone=self)
+    self.emr = HadoopConstruct(self,'Analytics', landing_zone=self, directory=self.directory)
+    self.jumpbox = JumpBoxConstruct(self,'Jumpbox',landing_zone=self, directory=self.directory)
 
   @property
   def cidr_block(self)->str:
