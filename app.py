@@ -15,7 +15,7 @@ class NetworkingApp(core.App):
 
   @property
   def zones(self)->List[LandingZone]:
-    return [] #[ self.virginia, self.ireland, self.tokyo, self.oregon, self.canada ]
+    return [ self.euro ]
 
 app = NetworkingApp()
 app.synth()
