@@ -10,3 +10,4 @@ aws_cdk.aws_directoryservice
 aws_cdk.aws_backup
 aws_cdk.aws_emr
 aws_cdk.aws_glue
+aws_cdk.aws_sso

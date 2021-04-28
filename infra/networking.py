@@ -7,6 +7,7 @@ from infra.emr import HadoopConstruct
 from infra.vpce import VpcEndpointsForAWSServices
 from infra.auth import DirectoryServicesConstruct
 from infra.jumpbox import JumpBoxConstruct
+from infra.biz_unit import BisnessUnitConstruct
 from infra.landing_zone import ILandingZone
 from aws_cdk import (
     core,
@@ -79,6 +80,9 @@ class EuroMapRed(LandingZone):
     self.directory = DirectoryServicesConstruct(self,'Directory',landing_zone=self)
     self.emr = HadoopConstruct(self,'Analytics', landing_zone=self, directory=self.directory)
     self.jumpbox = JumpBoxConstruct(self,'Jumpbox',landing_zone=self)
+
+    for team_name in ['red-team','blue-team','green-team']:
+      self.emr.add_business_unit(team_name)
 
   @property
   def cidr_block(self)->str:

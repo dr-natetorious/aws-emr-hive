@@ -1,6 +1,7 @@
 import os.path as path
 import jsii
 from infra.landing_zone import ILandingZone
+from infra.biz_unit import BisnessUnitConstruct
 from infra.auth import DirectoryServicesConstruct
 from aws_cdk import (
   core,
@@ -26,10 +27,15 @@ services = {
 
 class HadoopConstruct(core.Construct):
   """
-  Configure the Graph management layer
+  Configure the Hadoop management
   """
+  @property
+  def landing_zone(self)->ILandingZone:
+    return self.__landing_zone
+
   def __init__(self, scope: core.Construct, id: str, landing_zone:ILandingZone, directory:DirectoryServicesConstruct, **kwargs) -> None:
     super().__init__(scope, id, **kwargs)
+    self.__landing_zone = landing_zone
 
     # Configure the security groups
     self.security_group = ec2.SecurityGroup(self,'SecurityGroup',
@@ -64,7 +70,7 @@ class HadoopConstruct(core.Construct):
     )
 
     # Setup roles...    
-    jobFlowRole = iam.Role(self,'JobFlowRole', assumed_by=iam.ServicePrincipal(service='ec2.amazonaws.com'), 
+    self.jobFlowRole = iam.Role(self,'JobFlowRole', assumed_by=iam.ServicePrincipal(service='ec2.amazonaws.com'), 
       managed_policies=[
         iam.ManagedPolicy.from_aws_managed_policy_name('AmazonSSMManagedInstanceCore'),
         iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AmazonElasticMapReduceforEC2Role'),
@@ -74,7 +80,7 @@ class HadoopConstruct(core.Construct):
     profile_name='jobflowprofile@{}-{}'.format(landing_zone.zone_name, core.Stack.of(self).region)
     job_flow_instance_profile = iam.CfnInstanceProfile(self,'JobFlowInstanceProfile',
       instance_profile_name=profile_name,
-      roles=[jobFlowRole.role_name])
+      roles=[self.jobFlowRole.role_name])
 
     serviceRole = iam.Role(self,'ServiceRole', assumed_by=iam.ServicePrincipal(service='elasticmapreduce.amazonaws.com'),
       managed_policies=[
@@ -161,3 +167,9 @@ class HadoopConstruct(core.Construct):
     )
 
     self.cluster.add_depends_on(job_flow_instance_profile)
+
+  def add_business_unit(self, team_name:str)->BisnessUnitConstruct:
+    bizunit = BisnessUnitConstruct(self, 'BU_'+team_name,
+      landing_zone=self.landing_zone,
+      unit_name=team_name,
+      emr_ec2_role=self.jobFlowRole)
