@@ -13,7 +13,7 @@ class DirectoryServicesConstruct(core.Construct):
     """
     super().__init__(scope,id, **kwargs)
     
-    self.username= 'admin'
+    self.admin = 'admin'
     self.password = 'I-l1K3-74(oz'
     self.mad = ds.CfnMicrosoftAD(self,'ActiveDirectory',
       name='virtual.world',
@@ -26,31 +26,33 @@ class DirectoryServicesConstruct(core.Construct):
         subnet_ids= landing_zone.vpc.select_subnets(subnet_group_name='Hadoop').subnet_ids
       ))
 
-    self.auto_join_domain = ssm.CfnDocument(self,'DomainJoinDocument',
-      name='awsconfig_DomainJoin_'+self.mad.ref,
+    document_name='Domain_Join_'+self.mad.ref
+    self.domain_join_document = ssm.CfnDocument(self,'JoinDomainDocument',
+      name= document_name,
       content={
         "schemaVersion": "1.0",
-        "description": "Automatic Domain Join Configuration created by EC2 Console.",
+        "description": "Domain Join {}".format(self.mad.ref),
         "runtimeConfig": {
           "aws:domainJoin": {
             "properties": {
               "directoryId": self.mad.ref,
               "directoryName": "virtual.world",
-              # "dnsIpAddresses": [
-              #   "10.0.2.60",
-              #   "10.0.2.9"
-              # ]
+              "dnsIpAddresses": [
+                "10.100.18.34",
+                "10.100.39.122",
+              ]
             }
           }
         }
       })
 
-    # self.association = ssm.CfnAssociation(self,'DomainJoinAssociation',
-    #   association_name='Autojoin machines by tag to '+self.mad.ref,
-    #   # document_version='LATEST',
-    #   name= self.auto_join_domain.ref,
-    #   targets= [
-    #     ssm.CfnAssociation.TargetProperty(
-    #       key='domain',
-    #       values=[landing_zone.zone_name])
-    #   ])
+    self.association = ssm.CfnAssociation(self,'JoinTagAssociation',
+      association_name='joindomain_by_tags_'+self.mad.ref,
+      name= document_name,
+      targets= [
+        ssm.CfnAssociation.TargetProperty(
+          key='tag:domain',
+          values=[landing_zone.zone_name])
+      ])
+
+    self.association.add_depends_on(self.domain_join_document)

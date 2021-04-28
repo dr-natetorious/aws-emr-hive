@@ -78,7 +78,7 @@ class EuroMapRed(LandingZone):
 
     self.directory = DirectoryServicesConstruct(self,'Directory',landing_zone=self)
     self.emr = HadoopConstruct(self,'Analytics', landing_zone=self, directory=self.directory)
-    self.jumpbox = JumpBoxConstruct(self,'Jumpbox',landing_zone=self, directory=self.directory)
+    self.jumpbox = JumpBoxConstruct(self,'Jumpbox',landing_zone=self)
 
   @property
   def cidr_block(self)->str:

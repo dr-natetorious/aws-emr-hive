@@ -9,17 +9,26 @@ from aws_cdk import (
     aws_directoryservice as ds,
 )
 
+
 class JumpBoxConstruct(core.Construct):
-  def __init__(self, scope:core.Construct, id:str, landing_zone:ILandingZone, directory:DirectoryServicesConstruct, **kwargs):
+  def __init__(self, scope:core.Construct, id:str, landing_zone:ILandingZone, **kwargs):
     """
     Configure Dns Resolver
     """
     super().__init__(scope,id, **kwargs)
 
+    # Only required for debugging the jumpbox
+    key_pair_name = 'nbachmei.personal.'+core.Stack.of(self).region
+
     self.security_group = ec2.SecurityGroup(self,'SecurityGroup',
       description='JumpBox Security Group', 
       vpc= landing_zone.vpc,
       allow_all_outbound=True)
+
+    self.security_group.add_ingress_rule(
+      peer= ec2.Peer.ipv4('100.8.119.0/24'),
+      connection= ec2.Port.tcp(3389),
+      description='Laptop VPN')
 
     role = iam.Role(self,'Role',
       assumed_by=iam.ServicePrincipal(
@@ -30,9 +39,10 @@ class JumpBoxConstruct(core.Construct):
         iam.ManagedPolicy.from_aws_managed_policy_name('AmazonSSMDirectoryServiceAccess'),
       ])
 
-    self.instance = ec2.Instance(self,'JumpBox',
+    self.instance = ec2.Instance(self,'DevInstance',
       role= role,
       vpc= landing_zone.vpc,
+      key_name= key_pair_name,
       instance_type=ec2.InstanceType.of(
         instance_class= ec2.InstanceClass.BURSTABLE3,
         instance_size=ec2.InstanceSize.SMALL),
@@ -43,11 +53,4 @@ class JumpBoxConstruct(core.Construct):
       machine_image= ec2.MachineImage.generic_windows(ami_map={
         'eu-west-1': 'ami-03b9a7c8f0fc1808e',
       }))
-
-    # self.association = ssm.CfnAssociation(self,'DomainJoinAssociation',
-    #   document_version='LATEST',
-    #   name= directory.auto_join_domain.ref,
-    #   instance_id= self.instance.instance_id)
-
-
-    
+    core.Tags.of(self.instance).add('domain',landing_zone.zone_name)
