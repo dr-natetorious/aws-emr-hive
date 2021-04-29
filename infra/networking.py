@@ -77,12 +77,10 @@ class EuroMapRed(LandingZone):
   def __init__(self, scope:Construct, id:str, **kwargs)->None:
     super().__init__(scope, id, **kwargs)    
 
+    group_names = ['red-team','blue-team','green-team']
     self.directory = DirectoryServicesConstruct(self,'Directory',landing_zone=self)
-    self.emr = HadoopConstruct(self,'Analytics', landing_zone=self, directory=self.directory)
+    self.emr = HadoopConstruct(self,'Analytics', landing_zone=self, directory=self.directory, group_names=group_names)
     self.jumpbox = JumpBoxConstruct(self,'Jumpbox',landing_zone=self)
-
-    for team_name in ['red-team','blue-team','green-team']:
-      self.emr.add_business_unit(team_name)
 
   @property
   def cidr_block(self)->str:

@@ -1,8 +1,10 @@
+from typing import List
 import os.path as path
 import jsii
 from infra.landing_zone import ILandingZone
 from infra.biz_unit import BisnessUnitConstruct
 from infra.auth import DirectoryServicesConstruct
+from infra.emrfs import EmrfsConstruct
 from aws_cdk import (
   core,
   aws_ec2 as ec2,
@@ -33,7 +35,7 @@ class HadoopConstruct(core.Construct):
   def landing_zone(self)->ILandingZone:
     return self.__landing_zone
 
-  def __init__(self, scope: core.Construct, id: str, landing_zone:ILandingZone, directory:DirectoryServicesConstruct, **kwargs) -> None:
+  def __init__(self, scope: core.Construct, id: str, landing_zone:ILandingZone, directory:DirectoryServicesConstruct, group_names:[List], **kwargs) -> None:
     super().__init__(scope, id, **kwargs)
     self.__landing_zone = landing_zone
 
@@ -94,6 +96,12 @@ class HadoopConstruct(core.Construct):
     self.bucket = s3.Bucket(self,'LogBucket',
       removal_policy= core.RemovalPolicy.DESTROY)
 
+    emr_fs = EmrfsConstruct(self,'Emrfs',
+      landing_zone=landing_zone, 
+      directory=directory, 
+      group_names=group_names, 
+      job_flow_role = self.jobFlowRole)
+
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticmapreduce-instancefleetconfig.html
     self.cluster = emr.CfnCluster(self,'MapRed',
       name='HadoopCluster',
@@ -122,11 +130,12 @@ class HadoopConstruct(core.Construct):
             'hive.metastore.schema.verification': 'false',
           })
       ],
+      # security_configuration= security_configuration.ref,
       # kerberos_attributes= emr.CfnCluster.KerberosAttributesProperty(
       #   kdc_admin_password=directory.password,
-      #   realm= directory.mad.name,
+      #   realm= directory.mad.name.upper(),
       #   ad_domain_join_password=directory.password,
-      #   ad_domain_join_user= directory.username
+      #   ad_domain_join_user= directory.admin
       # ),
       managed_scaling_policy= emr.CfnCluster.ManagedScalingPolicyProperty(
         compute_limits=emr.CfnCluster.ComputeLimitsProperty(
@@ -167,9 +176,4 @@ class HadoopConstruct(core.Construct):
     )
 
     self.cluster.add_depends_on(job_flow_instance_profile)
-
-  def add_business_unit(self, team_name:str)->BisnessUnitConstruct:
-    bizunit = BisnessUnitConstruct(self, 'BU_'+team_name,
-      landing_zone=self.landing_zone,
-      unit_name=team_name,
-      emr_ec2_role=self.jobFlowRole)
+  
