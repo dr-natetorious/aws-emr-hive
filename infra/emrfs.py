@@ -65,19 +65,7 @@ class EmrfsConstruct(core.Construct):
       security_configuration= {
         "AuthorizationConfiguration": {
           "EmrFsConfiguration": {
-            "RoleMappings": [{
-              "Role": "arn:aws:iam::123456789101:role/allow_EMRFS_access_for_user1",
-              "IdentifierType": "User",
-              "Identifiers": [ "user1" ]
-            },{
-              "Role": "arn:aws:iam::123456789101:role/allow_EMRFS_access_to_MyBuckets",
-              "IdentifierType": "Prefix",
-              "Identifiers": [ "s3://MyBucket/","s3://MyOtherBucket/" ]
-            },{
-              "Role": "arn:aws:iam::123456789101:role/allow_EMRFS_access_for_AdminGroup",
-              "IdentifierType": "Group",
-              "Identifiers": [ "AdminGroup" ]
-            }]
+            "RoleMappings": mappings
           }
         }
       })
