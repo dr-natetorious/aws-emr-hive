@@ -103,7 +103,7 @@ class HadoopConstruct(core.Construct):
       job_flow_role = self.jobFlowRole)
 
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticmapreduce-instancefleetconfig.html
-    self.cluster = emr.CfnCluster(self,'MapRed',
+    self.cluster = emr.CfnCluster(self,'Hadoop',
       name='HadoopCluster',
       job_flow_role=profile_name, #'EMR_EC2_DefaultRole',
       service_role=serviceRole.role_name,
@@ -130,7 +130,7 @@ class HadoopConstruct(core.Construct):
             'hive.metastore.schema.verification': 'false',
           })
       ],
-      # security_configuration= emr_fs.security_configuration.ref,
+      security_configuration= emr_fs.security_configuration.ref,
       # kerberos_attributes= emr.CfnCluster.KerberosAttributesProperty(
       #   kdc_admin_password=directory.password,
       #   realm= directory.mad.name.upper(),

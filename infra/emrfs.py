@@ -61,6 +61,8 @@ class EmrfsConstruct(core.Construct):
         'Identifiers': [ group ]
       })
 
+    # Amazon EMR does not support cross-realm trusts with AWS Directory Service for Microsoft Active Directory.
+    # https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-kerberos-cross-realm.html
     self.security_configuration = emr.CfnSecurityConfiguration(self,'SecurityConfiguration',
       security_configuration= {
         "AuthorizationConfiguration": {
@@ -68,29 +70,29 @@ class EmrfsConstruct(core.Construct):
             "RoleMappings": mappings
           }
         },
-        "AuthenticationConfiguration":{
-          "KerberosConfiguration":{
-            "Provider":"ExternalKdc",
-            "ExternalKdcConfiguration":{
-              "KdcServerType":'Single',
-              'AdminServer':directory.mad.name,
-              'KdcServer':directory.mad.name,
-              'AdIntegrationConfiguration':{
-                'AdRealm': directory.mad.name,
-                'AdServer': directory.mad.name,
-                'AdDomain': directory.mad.name
-              }
-            }
-            # "Provider": "ClusterDedicatedKdc",
-            # "ClusterDedicatedKdcConfiguration":{
-            #   "TicketLifetimeInHours": 24,
-            #   "CrossRealmTrustConfiguration": {
-            #     "Realm": "VIRTUAL.WORLD",
-            #     "Domain": "virtual.world",
-            #     "AdminServer": "virtual.world:749",
-            #     "KdcServer": "virtual.world:88"
-            #   }
-            #}
-          }
-        }
+        # "AuthenticationConfiguration":{
+        #   "KerberosConfiguration":{
+        #     "Provider":"ExternalKdc",
+        #     "ExternalKdcConfiguration":{
+        #       "KdcServerType":'Single',
+        #       'AdminServer':directory.mad.name,
+        #       'KdcServer':directory.mad.name,
+        #       'AdIntegrationConfiguration':{
+        #         'AdRealm': directory.mad.name,
+        #         'AdServer': directory.mad.name,
+        #         'AdDomain': directory.mad.name
+        #       }
+        #     }
+        #     # "Provider": "ClusterDedicatedKdc",
+        #     # "ClusterDedicatedKdcConfiguration":{
+        #     #   "TicketLifetimeInHours": 24,
+        #     #   "CrossRealmTrustConfiguration": {
+        #     #     "Realm": "VIRTUAL.WORLD",
+        #     #     "Domain": "virtual.world",
+        #     #     "AdminServer": "virtual.world:749",
+        #     #     "KdcServer": "virtual.world:88"
+        #     #   }
+        #     #}
+        #   }
+        # }
       })
