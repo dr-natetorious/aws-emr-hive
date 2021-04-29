@@ -130,7 +130,7 @@ class HadoopConstruct(core.Construct):
             'hive.metastore.schema.verification': 'false',
           })
       ],
-      # security_configuration= security_configuration.ref,
+      # security_configuration= emr_fs.security_configuration.ref,
       # kerberos_attributes= emr.CfnCluster.KerberosAttributesProperty(
       #   kdc_admin_password=directory.password,
       #   realm= directory.mad.name.upper(),

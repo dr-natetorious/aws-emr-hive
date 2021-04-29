@@ -26,7 +26,7 @@ class DirectoryServicesConstruct(core.Construct):
         subnet_ids= landing_zone.vpc.select_subnets(subnet_group_name='Hadoop').subnet_ids
       ))
 
-    document_name='Domain_Join_'+self.mad.ref
+    document_name='JoinDomain_'+self.mad.ref
     self.domain_join_document = ssm.CfnDocument(self,'JoinDomainDocument',
       name= document_name,
       content={
@@ -37,10 +37,7 @@ class DirectoryServicesConstruct(core.Construct):
             "properties": {
               "directoryId": self.mad.ref,
               "directoryName": "virtual.world",
-              "dnsIpAddresses": [
-                "10.100.18.34",
-                "10.100.39.122",
-              ]
+              "dnsIpAddresses": [ self.mad.attr_dns_ip_addresses ]
             }
           }
         }

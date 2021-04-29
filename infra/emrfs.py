@@ -18,8 +18,7 @@ class EmrfsConstruct(core.Construct):
     super().__init__(scope, id, **kwargs)
     """
     Creates the business units from template.
-    Then defines the Security Configuration with EMRFS Policy
-    https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-create-security-configuration.html
+    Then defines the Security Configuration with EMRFS Policy    
     """
 
     # Create the business units from template
@@ -52,7 +51,8 @@ class EmrfsConstruct(core.Construct):
 
     job_flow_role.assume_role_policy.add_statements(emrfs_statement)
 
-    # Return the final configuration
+    # Build out the security configuration
+    # https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-create-security-configuration.html
     mappings = []
     for group in group_names:
       mappings.append({
@@ -61,35 +61,36 @@ class EmrfsConstruct(core.Construct):
         'Identifiers': [ group ]
       })
 
-    self.security_configuration = emr.CfnSecurityConfiguration(self,'Configuration',
+    self.security_configuration = emr.CfnSecurityConfiguration(self,'SecurityConfiguration',
       security_configuration= {
         "AuthorizationConfiguration": {
           "EmrFsConfiguration": {
             "RoleMappings": mappings
           }
+        },
+        "AuthenticationConfiguration":{
+          "KerberosConfiguration":{
+            "Provider":"ExternalKdc",
+            "ExternalKdcConfiguration":{
+              "KdcServerType":'Single',
+              'AdminServer':directory.mad.name,
+              'KdcServer':directory.mad.name,
+              'AdIntegrationConfiguration':{
+                'AdRealm': directory.mad.name,
+                'AdServer': directory.mad.name,
+                'AdDomain': directory.mad.name
+              }
+            }
+            # "Provider": "ClusterDedicatedKdc",
+            # "ClusterDedicatedKdcConfiguration":{
+            #   "TicketLifetimeInHours": 24,
+            #   "CrossRealmTrustConfiguration": {
+            #     "Realm": "VIRTUAL.WORLD",
+            #     "Domain": "virtual.world",
+            #     "AdminServer": "virtual.world:749",
+            #     "KdcServer": "virtual.world:88"
+            #   }
+            #}
+          }
         }
       })
-
-      # {
-      #   # "EncryptionConfiguration": {
-      #   #   "EnableInTransitEncryption": False,
-      #   #   "EnableAtRestEncryption": False
-      #   # },
-      #   "AuthenticationConfiguration": {
-      #     "EmrFsConfiguration": {
-      #       "RoleMappings": mappings
-      #     },
-      #     # "KerberosConfiguration": {
-      #     #   "Provider": "ClusterDedicatedKdc",
-      #     #   "ClusterDedicatedKdcConfiguration": {
-      #     #     "TicketLifetimeInHours": "24",
-      #     #     # "CrossRealmTrustConfiguration": {
-      #     #     #   "Realm": "VIRTUAL.WORLD",
-      #     #     #   "Domain": "virtual.world",
-      #     #     #   "AdminServer": "virtual.world",
-      #     #     #   "KdcServer": "virtual.world"
-      #     #     # }
-      #     #   }
-      #     # }
-      #   }
-      # })
